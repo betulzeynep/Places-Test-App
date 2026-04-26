@@ -100,15 +100,20 @@ struct CustomLocationInputView: View {
         
         guard let lat = LocationValidation.parseCoordinate(latitude),
               let lon = LocationValidation.parseCoordinate(longitude) else {
-            validationError = "Please enter valid numbers"
+            let error = ValidationError.invalidInput("coordinates")
+            validationError = error.userMessage
+            Logger.ui(error.technicalMessage, level: .warning)
             return
         }
         
         guard LocationValidation.isValidCoordinates(latitude: lat, longitude: lon) else {
-            validationError = "Coordinates out of range"
+            let error = ValidationError.coordinatesOutOfRange
+            validationError = error.userMessage
+            Logger.ui(error.technicalMessage, level: .warning)
             return
         }
         
+        Logger.ui("Submitting valid coordinates: lat=\(lat), lon=\(lon)", level: .info)
         onSubmit(lat, lon)
     }
 }

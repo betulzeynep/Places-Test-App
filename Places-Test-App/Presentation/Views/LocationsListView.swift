@@ -57,7 +57,9 @@ struct LocationsListView: View {
                 Section {
                     ForEach(viewModel.locations) { location in
                         Button {
-                            viewModel.openLocation(location)
+                            Task {
+                                await viewModel.openLocation(location)
+                            }
                         } label: {
                             LocationRow(location: location)
                         }
@@ -78,7 +80,9 @@ struct LocationsListView: View {
                     latitude: $customLat,
                     longitude: $customLon
                 ) { lat, lon in
-                    viewModel.openCustomLocation(latitude: lat, longitude: lon)
+                    Task {
+                        await viewModel.openCustomLocation(latitude: lat, longitude: lon)
+                    }
                 }
             } header: {
                 Text("Custom Location")
@@ -95,17 +99,17 @@ struct LocationsListView: View {
     
     private var loadingOverlay: some View {
         ZStack {
-            Color.black.opacity(0.2)
+            Color.black.opacity(Constants.UI.errorOverlayOpacity)
                 .ignoresSafeArea()
                 .accessibilityHidden(true)  // Background is decorative
             
             ProgressView()
                 .progressViewStyle(.circular)
                 .tint(.white)
-                .scaleEffect(1.5)
+                .scaleEffect(Constants.UI.loadingScaleEffect)
                 .padding()
                 .background(
-                    RoundedRectangle(cornerRadius: 12)
+                    RoundedRectangle(cornerRadius: Constants.UI.cornerRadius)
                         .fill(.regularMaterial)
                 )
                 .accessibilityLabel("Loading locations")

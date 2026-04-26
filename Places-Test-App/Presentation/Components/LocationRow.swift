@@ -16,11 +16,11 @@ struct LocationRow: View {
     // MARK: - Body
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text(location.name)
+            Text(location.displayName)
                 .font(.headline)
                 .foregroundStyle(.primary)
             
-            Text("Lat: \(location.lat, specifier: "%.4f"), Lon: \(location.lon, specifier: "%.4f")")
+            Text("Lat: \(location.lat, specifier: Constants.UI.coordinateDisplayPrecision), Lon: \(location.lon, specifier: Constants.UI.coordinateDisplayPrecision)")
                 .font(.caption)
                 .foregroundStyle(.secondary)
         }
@@ -33,9 +33,12 @@ struct LocationRow: View {
     
     // MARK: - Accessibility Helper
     private var accessibilityDescription: String {
-        let latText = location.lat >= 0 ? "North \(abs(location.lat))" : "South \(abs(location.lat))"
-        let lonText = location.lon >= 0 ? "East \(abs(location.lon))" : "West \(abs(location.lon))"
-        return "\(location.name), Latitude \(latText) degrees, Longitude \(lonText) degrees"
+        let latDirection = location.lat >= 0 ? "North" : "South"
+        let lonDirection = location.lon >= 0 ? "East" : "West"
+        let latValue = String(format: "%.2f", abs(location.lat))
+        let lonValue = String(format: "%.2f", abs(location.lon))
+        
+        return "\(location.displayName), Latitude \(latValue) degrees \(latDirection), Longitude \(lonValue) degrees \(lonDirection)"
     }
 }
 

@@ -17,7 +17,7 @@ final class LocationRepository: LocationRepositoryProtocol {
     // MARK: - Initialization
     init(
         networkService: NetworkServiceProtocol,
-        locationsURL: String = "https://raw.githubusercontent.com/abnamrocoesd/assignment-ios/main/locations.json"
+        locationsURL: String = Constants.API.locationsURL
     ) {
         self.networkService = networkService
         self.locationsURL = locationsURL

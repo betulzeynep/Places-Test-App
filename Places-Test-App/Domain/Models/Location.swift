@@ -7,11 +7,6 @@
 
 import Foundation
 
-// MARK: - Location Response Wrapper
-struct LocationResponse: Codable {
-    let locations: [Location]
-}
-
 // MARK: - Model
 struct Location: Codable, Identifiable, Equatable {
     let id = UUID()
@@ -22,20 +17,20 @@ struct Location: Codable, Identifiable, Equatable {
     enum CodingKeys: String, CodingKey {
         case name
         case lat
-        case lon = "long"
+        case lon = "long"  // API uses "long", we use "lon"
     }
     
-    // Custom decoder for optional name and UUID handling
+    // Custom decoder for optional name
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         
         // Name is optional in JSON, provide default if missing
-        name = try container.decodeIfPresent(String.self, forKey: .name) ?? "Unknown Location"
+        name = try container.decodeIfPresent(String.self, forKey: .name) ?? Constants.Defaults.unknownLocationName
         lat = try container.decode(Double.self, forKey: .lat)
         lon = try container.decode(Double.self, forKey: .lon)
     }
     
-    // Encoding (for future caching/saving)
+    // Encoding
     func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(name, forKey: .name)
@@ -51,6 +46,7 @@ struct Location: Codable, Identifiable, Equatable {
         lhs.lon == rhs.lon
     }
 }
+
 
 // MARK: - Helpers
 extension Location {
@@ -68,8 +64,9 @@ extension Location {
     
     /// Display name showing coordinates for unknown locations
     var displayName: String {
-        if name == "Unknown Location" {
-            return "Location (\(lat.formatted(.number.precision(.fractionLength(2)))), \(lon.formatted(.number.precision(.fractionLength(2)))))"
+        if name == Constants.Defaults.unknownLocationName {
+            let precision = Constants.UI.coordinatePrecision
+            return "Location (\(lat.formatted(.number.precision(.fractionLength(precision)))), \(lon.formatted(.number.precision(.fractionLength(precision)))))"
         }
         return name
     }
