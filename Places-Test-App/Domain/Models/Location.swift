@@ -7,6 +7,11 @@
 
 import Foundation
 
+// MARK: - Location Response Wrapper
+struct LocationResponse: Codable {
+    let locations: [Location]
+}
+
 // MARK: - Model
 struct Location: Codable, Identifiable, Equatable {
     let id = UUID()
@@ -15,7 +20,27 @@ struct Location: Codable, Identifiable, Equatable {
     let lon: Double
     
     enum CodingKeys: String, CodingKey {
-        case name, lat, lon
+        case name
+        case lat
+        case lon = "long"
+    }
+    
+    // Custom decoder for optional name and UUID handling
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        
+        // Name is optional in JSON, provide default if missing
+        name = try container.decodeIfPresent(String.self, forKey: .name) ?? "Unknown Location"
+        lat = try container.decode(Double.self, forKey: .lat)
+        lon = try container.decode(Double.self, forKey: .lon)
+    }
+    
+    // Encoding (for future caching/saving)
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(name, forKey: .name)
+        try container.encode(lat, forKey: .lat)
+        try container.encode(lon, forKey: .lon)
     }
     
     // MARK: - Equatable
@@ -34,10 +59,18 @@ extension Location {
         LocationValidation.isValidCoordinates(latitude: lat, longitude: lon)
     }
     
-    /// Creates a custom location
+    /// Creates a custom location (for manual input)
     init(name: String, latitude: Double, longitude: Double) {
         self.name = name
         self.lat = latitude
         self.lon = longitude
+    }
+    
+    /// Display name showing coordinates for unknown locations
+    var displayName: String {
+        if name == "Unknown Location" {
+            return "Location (\(lat.formatted(.number.precision(.fractionLength(2)))), \(lon.formatted(.number.precision(.fractionLength(2)))))"
+        }
+        return name
     }
 }

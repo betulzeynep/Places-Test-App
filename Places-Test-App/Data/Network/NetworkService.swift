@@ -17,9 +17,14 @@ final class NetworkService: NetworkServiceProtocol {
     // MARK: - Initialization
     init(
         session: URLSession = .shared,
-        decoder: JSONDecoder = JSONDecoder()
+        decoder: JSONDecoder = JSONDecoder(),
+        timeout: TimeInterval = 30
     ) {
-        self.session = session
+        var configuration = URLSessionConfiguration.default
+        configuration.timeoutIntervalForRequest = timeout
+        configuration.timeoutIntervalForResource = timeout
+        
+        self.session = URLSession(configuration: configuration)
         self.decoder = decoder
     }
     

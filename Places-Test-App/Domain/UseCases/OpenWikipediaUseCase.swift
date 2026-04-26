@@ -10,7 +10,7 @@ import UIKit
 
 // MARK: - Open Wikipedia Use Case Protocol
 protocol OpenWikipediaUseCaseProtocol {
-    func execute(latitude: Double, longitude: Double) -> Bool
+    func execute(latitude: Double, longitude: Double) async -> Bool
 }
 
 // MARK: - Open Wikipedia Use Case Implementation
@@ -31,9 +31,10 @@ final class OpenWikipediaUseCase: OpenWikipediaUseCaseProtocol {
     ///   - latitude: Location latitude
     ///   - longitude: Location longitude
     /// - Returns: true if the app was opened successfully, false otherwise
-    func execute(latitude: Double, longitude: Double) -> Bool {
+    func execute(latitude: Double, longitude: Double) async -> Bool {
         // Validate coordinates before creating URL
         guard LocationValidation.isValidCoordinates(latitude: latitude, longitude: longitude) else {
+            print("❌ Invalid coordinates: lat=\(latitude), lon=\(longitude)")
             return false
         }
         
@@ -41,22 +42,22 @@ final class OpenWikipediaUseCase: OpenWikipediaUseCaseProtocol {
         let urlString = "\(urlScheme)?lat=\(latitude)&lon=\(longitude)"
         
         guard let url = URL(string: urlString) else {
+            print("❌ Invalid URL: \(urlString)")
             return false
         }
         
-        // Check if Wikipedia app can be opened
-        guard UIApplication.shared.canOpenURL(url) else {
-            return false
+        print("🔗 Opening URL: \(urlString)")
+        
+        // Try to open Wikipedia app
+        let success = await UIApplication.shared.open(url)
+        
+        if success {
+            print("✅ Successfully opened Wikipedia app")
+        } else {
+            print("❌ Failed to open Wikipedia app")
         }
         
-        // Open Wikipedia app
-        UIApplication.shared.open(url, options: [:]) { success in
-            if !success {
-                print("Failed to open Wikipedia app")
-            }
-        }
-        
-        return true
+        return success
     }
 }
 
@@ -65,7 +66,7 @@ extension OpenWikipediaUseCase {
     /// Opens Wikipedia app for a given Location
     /// - Parameter location: The location to open
     /// - Returns: true if successful, false otherwise
-    func execute(for location: Location) -> Bool {
-        execute(latitude: location.lat, longitude: location.lon)
+    func execute(for location: Location) async -> Bool {
+        await execute(latitude: location.lat, longitude: location.lon)
     }
 }

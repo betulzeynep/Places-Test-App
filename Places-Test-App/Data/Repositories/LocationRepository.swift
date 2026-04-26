@@ -32,12 +32,18 @@ final class LocationRepository: LocationRepositoryProtocol {
         }
         
         do {
-            let locations: [Location] = try await networkService.fetch(from: url)
-            let validLocations = locations.filter { $0.isValid }
+            // Fetch wrapped response
+            let response: LocationResponse = try await networkService.fetch(from: url)
+            
+            // Validate locations (filter out invalid coordinates)
+            let validLocations = response.locations.filter { $0.isValid }
+            
             return validLocations
         } catch let error as NetworkError {
+            // Re-throw NetworkError as is
             throw error
         } catch {
+            // Wrap unknown errors
             throw NetworkError.unknown(error)
         }
     }
