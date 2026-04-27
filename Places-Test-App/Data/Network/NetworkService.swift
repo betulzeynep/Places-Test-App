@@ -16,15 +16,18 @@ final class NetworkService: NetworkServiceProtocol {
     
     // MARK: - Initialization
     init(
-        session: URLSession = .shared,
+        session: URLSession? = nil,
         decoder: JSONDecoder = JSONDecoder(),
         timeout: TimeInterval = 30
     ) {
-        let configuration = URLSessionConfiguration.default
-        configuration.timeoutIntervalForRequest = timeout
-        configuration.timeoutIntervalForResource = timeout
-        
-        self.session = URLSession(configuration: configuration)
+        if let session {
+            self.session = session
+        } else {
+            let configuration = URLSessionConfiguration.default
+            configuration.timeoutIntervalForRequest = timeout
+            configuration.timeoutIntervalForResource = timeout
+            self.session = URLSession(configuration: configuration)
+        }
         self.decoder = decoder
     }
     

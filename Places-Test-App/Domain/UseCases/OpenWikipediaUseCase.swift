@@ -66,7 +66,7 @@ final class OpenWikipediaUseCase: OpenWikipediaUseCaseProtocol {
     
     /// Opens Wikipedia with specified link type
     func execute(linkType: Constants.DeepLink.LinkType) -> Bool {
-        let urlString = linkType.urlString
+        let urlString = buildURLString(for: linkType)
         
         guard let url = URL(string: urlString) else {
             Logger.network("Failed to create URL: \(urlString)", level: .error)
@@ -112,6 +112,22 @@ final class OpenWikipediaUseCase: OpenWikipediaUseCaseProtocol {
 
 // MARK: - Convenience Extensions
 extension OpenWikipediaUseCase {
+    private func buildURLString(for linkType: Constants.DeepLink.LinkType) -> String {
+        switch linkType {
+        case .placesWithCoordinates(let lat, let lon):
+            return "\(urlScheme)?lat=\(lat)&lon=\(lon)"
+        case .placesWithArticle(let articleURL):
+            guard
+                let encoded = articleURL.addingPercentEncoding(
+                    withAllowedCharacters: .urlQueryAllowed
+                )
+            else {
+                return urlScheme
+            }
+            return "\(urlScheme)?WMFArticleURL=\(encoded)"
+        }
+    }
+
     /// Opens Wikipedia for a Location object
     /// Uses name if available (Places + Article), otherwise coordinates only (Places + Map)
     func execute(for location: Location) -> Bool {

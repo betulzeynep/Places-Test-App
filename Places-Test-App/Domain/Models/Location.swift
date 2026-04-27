@@ -9,10 +9,14 @@ import Foundation
 
 // MARK: - Model
 struct Location: Codable, Identifiable, Equatable {
-    let id = UUID()
     let name: String
     let lat: Double
     let lon: Double
+    
+    /// Stable identifier based on location payload.
+    var id: String {
+        "\(name)|\(lat)|\(lon)"
+    }
     
     enum CodingKeys: String, CodingKey {
         case name
@@ -38,13 +42,6 @@ struct Location: Codable, Identifiable, Equatable {
         try container.encode(lon, forKey: .lon)
     }
     
-    // MARK: - Equatable
-    static func == (lhs: Location, rhs: Location) -> Bool {
-        lhs.id == rhs.id &&
-        lhs.name == rhs.name &&
-        lhs.lat == rhs.lat &&
-        lhs.lon == rhs.lon
-    }
 }
 
 
