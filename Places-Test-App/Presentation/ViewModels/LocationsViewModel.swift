@@ -59,10 +59,10 @@ final class LocationsViewModel: ObservableObject {
     
     /// Opens Wikipedia app for a specific location
     /// - Parameter location: The location to open in Wikipedia
-    func openLocation(_ location: Location) async {
+    func openLocation(_ location: Location) {
         Logger.ui("Opening Wikipedia for: \(location.name)", level: .info)
         
-        let success = await openWikipediaUseCase.execute(latitude: location.lat, longitude: location.lon)
+        let success = openWikipediaUseCase.execute(latitude: location.lat, longitude: location.lon)
         
         if !success {
             let error = DeepLinkError.wikipediaNotInstalled
@@ -75,7 +75,7 @@ final class LocationsViewModel: ObservableObject {
     /// - Parameters:
     ///   - latitude: Custom latitude
     ///   - longitude: Custom longitude
-    func openCustomLocation(latitude: Double, longitude: Double) async {
+    func openCustomLocation(latitude: Double, longitude: Double) {
         // Validate coordinates first
         guard LocationValidation.isValidCoordinates(latitude: latitude, longitude: longitude) else {
             let error = ValidationError.invalidCoordinates
@@ -86,7 +86,7 @@ final class LocationsViewModel: ObservableObject {
         
         Logger.ui("Opening custom location: lat=\(latitude), lon=\(longitude)", level: .info)
         
-        let success = await openWikipediaUseCase.execute(latitude: latitude, longitude: longitude)
+        let success = openWikipediaUseCase.execute(latitude: latitude, longitude: longitude)
         
         if !success {
             let error = DeepLinkError.wikipediaOpenFailed

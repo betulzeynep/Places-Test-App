@@ -16,12 +16,20 @@ struct ErrorView: View {
     
     // MARK: - Body
     var body: some View {
-        HStack(spacing: 12) {
-            Image(systemName: "exclamationmark.triangle.fill")
-                .foregroundStyle(.white)
-                .font(.title3)
-                .accessibilityHidden(true)  // Icon decorative
+        HStack(spacing: Constants.UI.mediumSpacing) {
+            // Icon
+            ZStack {
+                Circle()
+                    .fill(.white.opacity(Constants.UI.whiteBackgroundOpacity))
+                    .frame(width: 36, height: 36)
+                
+                Image(systemName: "exclamationmark.triangle.fill")
+                    .foregroundStyle(.white)
+                    .font(.title3)
+            }
+            .accessibilityHidden(true)
             
+            // Message
             Text(message)
                 .font(.subheadline)
                 .foregroundStyle(.white)
@@ -29,26 +37,33 @@ struct ErrorView: View {
             
             Spacer()
             
+            // Dismiss Button
             Button {
+                Logger.ui("Dismissing error message", level: .info)
                 onDismiss()
             } label: {
-                Image(systemName: "xmark.circle.fill")
+                Image(systemName: "xmark")
                     .foregroundStyle(.white.opacity(0.7))
-                    .font(.title3)
+                    .font(.callout)
+                    .fontWeight(.medium)
+                    .padding(Constants.UI.dismissButtonPadding)
+                    .background(.white.opacity(Constants.UI.whiteBackgroundOpacity))
+                    .clipShape(Circle())
             }
-            .accessibilityLabel("Dismiss error")
-            .accessibilityHint("Removes this error message")
+            .accessibilityLabel(Constants.Accessibility.Messages.dismissErrorLabel)
+            .accessibilityHint(Constants.Accessibility.Messages.dismissErrorHint)
         }
-        .padding()
+        .padding(Constants.UI.largeSpacing)
         .background(
-            RoundedRectangle(cornerRadius: 12)
+            RoundedRectangle(cornerRadius: Constants.UI.largeCornerRadius)
                 .fill(.red.gradient)
+                .shadow(color: .black.opacity(Constants.UI.iconBackgroundOpacity), radius: Constants.UI.largeShadowRadius, y: 5)
         )
         .padding(.horizontal)
-        .shadow(radius: 4)
         .accessibilityElement(children: .contain)
-        .accessibilityLabel("Error: \(message)")
-        .accessibilityAddTraits(.isModal)  // Error is important
+        .accessibilityLabel(Constants.Accessibility.Messages.errorLabel)
+        .accessibilityValue(message)
+        .accessibilityAddTraits(.isModal)
     }
 }
 

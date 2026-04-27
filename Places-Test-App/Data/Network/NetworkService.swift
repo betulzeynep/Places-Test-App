@@ -20,7 +20,7 @@ final class NetworkService: NetworkServiceProtocol {
         decoder: JSONDecoder = JSONDecoder(),
         timeout: TimeInterval = 30
     ) {
-        var configuration = URLSessionConfiguration.default
+        let configuration = URLSessionConfiguration.default
         configuration.timeoutIntervalForRequest = timeout
         configuration.timeoutIntervalForResource = timeout
         

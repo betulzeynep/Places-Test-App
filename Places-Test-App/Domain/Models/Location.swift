@@ -17,7 +17,7 @@ struct Location: Codable, Identifiable, Equatable {
     enum CodingKeys: String, CodingKey {
         case name
         case lat
-        case lon = "long"  // API uses "long", we use "lon"
+        case lon = "long"
     }
     
     // Custom decoder for optional name
