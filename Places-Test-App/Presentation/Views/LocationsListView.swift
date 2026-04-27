@@ -7,9 +7,6 @@
 
 import SwiftUI
 
-// wikipedia://places?lat=41.0082&lon=28.9784
-// wikipedia://places?lat=41.0082&lon=28.9784&WMFArticleURL=https://en.wikipedia.org/wiki/Istanbul
-
 // MARK: - LocationsList View
 struct LocationsListView: View {
 
@@ -110,19 +107,25 @@ struct LocationsListView: View {
             )
         }
     }
-
+    
     private var customLocationSection: some View {
         Section {
             CustomLocationInputView(
                 name: $customLocationName,
                 latitude: $customLat,
                 longitude: $customLon
-            ) { lat, lon in
-                Logger.ui(
-                    "User submitted custom location: lat=\(lat), lon=\(lon)",
-                    level: .info
-                )
-                viewModel.openCustomLocation(latitude: lat, longitude: lon)
+            ) { lat, lon, name in
+                // Determine what user provided
+                let hasName = name != nil && !name!.isEmpty
+                let hasCoordinates = lat != nil && lon != nil
+                
+                if hasName {
+                    Logger.ui("User submitted name only: \(name!)", level: .info)
+                } else if hasCoordinates {
+                    Logger.ui("User submitted coordinates only: (\(lat!), \(lon!))", level: .info)
+                }
+                
+                viewModel.openCustomLocation(latitude: lat, longitude: lon, name: name)
             }
         } header: {
             HStack {
@@ -135,7 +138,7 @@ struct LocationsListView: View {
             .textCase(nil)
             .accessibilityAddTraits(.isHeader)
         } footer: {
-            HStack(spacing: 4) {
+            HStack(spacing: Constants.UI.smallSpacing) {
                 Image(systemName: "info.circle.fill")
                     .accessibilityHidden(true)
                 Text(Constants.UIText.customLocationFooter)

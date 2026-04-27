@@ -20,6 +20,43 @@ enum Constants {
     enum DeepLink {
         static let wikipediaScheme = "wikipedia://places"
         static let wikipediaURLScheme = "wikipedia"
+        
+        // Deep link types
+        enum LinkType {
+            case placesWithCoordinates(lat: Double, lon: Double)
+            case placesWithArticle(articleURL: String)
+            
+            var urlString: String {
+                switch self {
+                case .placesWithCoordinates(let lat, let lon):
+                    return "wikipedia://places?lat=\(lat)&lon=\(lon)"
+                    
+                case .placesWithArticle(let articleURL):
+                    guard let encoded = articleURL.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) else {
+                        return "wikipedia://places"
+                    }
+                    return "wikipedia://places?WMFArticleURL=\(encoded)"
+                }
+            }
+            
+            var description: String {
+                switch self {
+                case .placesWithCoordinates:
+                    return "Places tab with coordinates"
+                case .placesWithArticle:
+                    return "Places tab with article"
+                }
+            }
+        }
+        
+        // Wikipedia article URL generator
+        static func wikipediaArticleURL(for locationName: String) -> String {
+            let formattedName = locationName
+                .replacingOccurrences(of: " ", with: "_")
+                .trimmingCharacters(in: .whitespaces)
+            
+            return "https://en.wikipedia.org/wiki/\(formattedName)"
+        }
     }
     
     // MARK: - Validation
@@ -96,10 +133,16 @@ enum Constants {
         static let noLocationsMessage = "Pull to refresh or check your connection"
         static let locationsHeaderTitle = "Locations"
         static let customLocationHeaderTitle = "Custom Location"
-        static let customLocationFooter = "Search for historical landmarks and points of interest based on custom coordinates."
+        static let customLocationFooter = "Search for historical landmarks and points of interest based on custom coordinates or names."
         
         static func locationsCount(_ count: Int) -> String {
             "\(count) location(s) available"
         }
+        
+        // Deep link feedback messages
+        static func openingPlacesWithArticle(for name: String) -> String {
+            "Opening Places tab with \(name) article"
+        }
+        static let openingPlacesWithMap = "Opening Places tab with coordinates"
     }
 }
