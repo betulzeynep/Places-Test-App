@@ -9,6 +9,12 @@ import SwiftUI
 
 // MARK: - Custom Location Input View
 struct CustomLocationInputView: View {
+    private enum SearchMode: String, CaseIterable, Identifiable {
+        case byName = "By Name"
+        case byCoordinates = "By Coordinates"
+
+        var id: String { rawValue }
+    }
 
     // MARK: - Bindings
     @Binding var name: String
@@ -19,92 +25,106 @@ struct CustomLocationInputView: View {
     let onSubmit: (Double?, Double?, String?) -> Void
 
     // MARK: - State
+    @State private var searchMode: SearchMode = .byName
     @State private var validationError: String?
 
     // MARK: - Computed Properties
 
-    /// Validates if input is valid
-    /// Either name OR coordinates should be provided
+    /// Validates if input is valid for selected search mode.
     private var isInputValid: Bool {
-        let hasName = !name.trimmingCharacters(in: .whitespaces).isEmpty
-
-        let latValue = LocationValidation.parseCoordinate(latitude)
-        let lonValue = LocationValidation.parseCoordinate(longitude)
-        let hasCoordinates =
-            latValue != nil && lonValue != nil
-            && LocationValidation.isValidCoordinates(
-                latitude: latValue!,
-                longitude: lonValue!
+        switch searchMode {
+        case .byName:
+            return !name.trimmingCharacters(in: .whitespaces).isEmpty
+        case .byCoordinates:
+            guard
+                let lat = LocationValidation.parseCoordinate(latitude),
+                let lon = LocationValidation.parseCoordinate(longitude)
+            else {
+                return false
+            }
+            return LocationValidation.isValidCoordinates(
+                latitude: lat,
+                longitude: lon
             )
-
-        return hasName != hasCoordinates
+        }
     }
 
     // MARK: - Body
     var body: some View {
         VStack(alignment: .leading, spacing: Constants.UI.largeSpacing) {
-            // Name Input
-            VStack(alignment: .leading, spacing: Constants.UI.smallSpacing) {
-                HStack {
-                    Text("Location Name")
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
-
-                    Spacer()
-
-                    Text("search by name")
-                        .font(.caption)
-                        .foregroundStyle(.tertiary)
+            Picker("Search Mode", selection: $searchMode) {
+                ForEach(SearchMode.allCases) { mode in
+                    Text(mode.rawValue).tag(mode)
                 }
-
-                TextField("e.g., Istanbul", text: $name)
-                    .textFieldStyle(.roundedBorder)
-                    .disabled(!latitude.isEmpty || !longitude.isEmpty)
-                    .opacity(
-                        (!latitude.isEmpty || !longitude.isEmpty) ? 0.5 : 1.0
-                    )
-                    .accessibilityLabel("Location name")
-                    .accessibilityHint(
-                        "Enter a location name to open its Wikipedia article"
-                    )
-                    .accessibilityIdentifier(
-                        Constants.Accessibility.Identifiers
-                            .customLocationNameField
-                    )
+            }
+            .pickerStyle(.segmented)
+            .accessibilityLabel("Search mode")
+            .onChange(of: searchMode) { _, newMode in
+                validationError = nil
+                switch newMode {
+                case .byName:
+                    latitude = ""
+                    longitude = ""
+                case .byCoordinates:
+                    name = ""
+                }
             }
 
-            // Coordinates
-            VStack(alignment: .leading, spacing: Constants.UI.smallSpacing) {
-                HStack {
-                    Text("Coordinates")
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
+            if searchMode == .byName {
+                // Name Input
+                VStack(alignment: .leading, spacing: Constants.UI.smallSpacing) {
+                    HStack {
+                        Text("Location Name")
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
 
-                    Spacer()
+                        Spacer()
 
-                    Text("search by coordinates")
-                        .font(.caption)
-                        .foregroundStyle(.tertiary)
+                        Text("search by name")
+                            .font(.caption)
+                            .foregroundStyle(.tertiary)
+                    }
+
+                    TextField("e.g., Istanbul", text: $name)
+                        .textFieldStyle(.roundedBorder)
+                        .accessibilityLabel("Location name")
+                        .accessibilityHint(
+                            "Enter a location name to open its Wikipedia article"
+                        )
+                        .accessibilityIdentifier(
+                            Constants.Accessibility.Identifiers
+                                .customLocationNameField
+                        )
                 }
+            } else {
+                // Coordinates
+                VStack(alignment: .leading, spacing: Constants.UI.smallSpacing) {
+                    HStack {
+                        Text("Coordinates")
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
 
-                HStack(spacing: Constants.UI.mediumSpacing) {
-                    coordinateInput(
-                        title: "Latitude",
-                        placeholder: "-90 to 90",
-                        text: $latitude
-                    )
+                        Spacer()
 
-                    coordinateInput(
-                        title: "Longitude",
-                        placeholder: "-180 to 180",
-                        text: $longitude
-                    )
+                        Text("search by coordinates")
+                            .font(.caption)
+                            .foregroundStyle(.tertiary)
+                    }
+
+                    HStack(spacing: Constants.UI.mediumSpacing) {
+                        coordinateInput(
+                            title: "Latitude",
+                            placeholder: "-90 to 90",
+                            text: $latitude
+                        )
+
+                        coordinateInput(
+                            title: "Longitude",
+                            placeholder: "-180 to 180",
+                            text: $longitude
+                        )
+                    }
                 }
-                .disabled(!name.trimmingCharacters(in: .whitespaces).isEmpty)
-                .opacity(
-                    !name.trimmingCharacters(in: .whitespaces).isEmpty
-                        ? 0.5 : 1.0
-                )
             }
 
             // Validation Error
@@ -160,7 +180,7 @@ struct CustomLocationInputView: View {
                 .foregroundStyle(.secondary)
 
             TextField(placeholder, text: text)
-                .keyboardType(.decimalPad)
+                .keyboardType(.numbersAndPunctuation)
                 .textFieldStyle(.roundedBorder)
                 .accessibilityLabel(title)
                 .accessibilityHint(
@@ -185,17 +205,11 @@ struct CustomLocationInputView: View {
     // MARK: - Computed Properties
 
     private var submitButtonHint: String {
-        let hasName = !name.trimmingCharacters(in: .whitespaces).isEmpty
-        let hasCoordinates = !latitude.isEmpty && !longitude.isEmpty
-
-        if hasName && hasCoordinates {
-            return "Opens Wikipedia Places tab with article and coordinates"
-        } else if hasName {
+        switch searchMode {
+        case .byName:
             return "Opens Wikipedia article for location name"
-        } else if hasCoordinates {
+        case .byCoordinates:
             return "Opens Wikipedia Places tab with coordinates"
-        } else {
-            return "Button disabled. Please enter location name or coordinates"
         }
     }
 
@@ -203,25 +217,25 @@ struct CustomLocationInputView: View {
     private func handleSubmit() {
         validationError = nil
 
-        let trimmedName = name.trimmingCharacters(in: .whitespaces)
-        let hasName = !trimmedName.isEmpty
+        switch searchMode {
+        case .byName:
+            let trimmedName = name.trimmingCharacters(in: .whitespaces)
+            guard !trimmedName.isEmpty else {
+                validationError = "Please provide a location name"
+                Logger.ui("Name input empty for by-name mode", level: .warning)
+                return
+            }
 
-        // Parse coordinates
-        let parsedLat = LocationValidation.parseCoordinate(latitude)
-        let parsedLon = LocationValidation.parseCoordinate(longitude)
-
-        // Validate based on what's provided
-        if hasName && parsedLat == nil && parsedLon == nil {
-            // Only name - valid!
             Logger.ui(
                 "Submitting location name only: \(trimmedName)",
                 level: .info
             )
             onSubmit(nil, nil, trimmedName)
-            return
-        } else if !hasName && parsedLat != nil && parsedLon != nil {
-            // Only coordinates - validate them
-            guard let lat = parsedLat, let lon = parsedLon else {
+        case .byCoordinates:
+            guard
+                let lat = LocationValidation.parseCoordinate(latitude),
+                let lon = LocationValidation.parseCoordinate(longitude)
+            else {
                 let error = ValidationError.invalidInput("coordinates")
                 validationError = error.userMessage
                 Logger.ui(error.technicalMessage, level: .warning)
@@ -245,13 +259,7 @@ struct CustomLocationInputView: View {
                 level: .info
             )
             onSubmit(lat, lon, nil)
-            return
         }
-
-        // Invalid state
-        validationError =
-            "Please provide either a location name or valid coordinates"
-        Logger.ui("Invalid input state", level: .warning)
     }
 }
 

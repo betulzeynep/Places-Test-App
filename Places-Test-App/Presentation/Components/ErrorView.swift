@@ -63,7 +63,6 @@ struct ErrorView: View {
         .accessibilityElement(children: .contain)
         .accessibilityLabel(Constants.Accessibility.Messages.errorLabel)
         .accessibilityValue(message)
-        .accessibilityAddTraits(.isModal)
     }
 }
 

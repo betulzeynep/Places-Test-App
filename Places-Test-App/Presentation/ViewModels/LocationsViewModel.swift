@@ -80,7 +80,7 @@ final class LocationsViewModel: ObservableObject {
         }
     }
     
-    /// Opens Wikipedia with flexible input (name, coordinates, or both)
+    /// Opens Wikipedia with mode-based input (name or coordinates)
     /// - Parameters:
     ///   - latitude: Optional latitude
     ///   - longitude: Optional longitude
@@ -90,10 +90,7 @@ final class LocationsViewModel: ObservableObject {
         longitude: Double?,
         name: String?
     ) {
-        // Scenario 1: Only name
-        if let locationName = name, !locationName.isEmpty, latitude == nil,
-            longitude == nil
-        {
+        if let locationName = name, !locationName.isEmpty {
             Logger.ui(
                 "Opening Wikipedia with name only: \(locationName)",
                 level: .info
@@ -110,10 +107,7 @@ final class LocationsViewModel: ObservableObject {
             return
         }
 
-        // Scenario 2: Only coordinates
-        if let lat = latitude, let lon = longitude,
-            name == nil || name?.isEmpty == true
-        {
+        if let lat = latitude, let lon = longitude {
             guard
                 LocationValidation.isValidCoordinates(
                     latitude: lat,
@@ -133,40 +127,6 @@ final class LocationsViewModel: ObservableObject {
             let success = openWikipediaUseCase.execute(
                 latitude: lat,
                 longitude: lon
-            )
-
-            if !success {
-                let error = DeepLinkError.wikipediaOpenFailed
-                errorMessage = error.userMessage
-                Logger.ui(error.technicalMessage, level: .error)
-            }
-            return
-        }
-
-        // Scenario 3: Both name and coordinates
-        if let lat = latitude, let lon = longitude, let locationName = name,
-            !locationName.isEmpty
-        {
-            guard
-                LocationValidation.isValidCoordinates(
-                    latitude: lat,
-                    longitude: lon
-                )
-            else {
-                let error = ValidationError.invalidCoordinates
-                errorMessage = error.userMessage
-                Logger.ui(error.technicalMessage, level: .warning)
-                return
-            }
-
-            Logger.ui(
-                "Opening Wikipedia with name and coordinates: \(locationName)",
-                level: .info
-            )
-            let success = openWikipediaUseCase.execute(
-                latitude: lat,
-                longitude: lon,
-                locationName: locationName
             )
 
             if !success {
